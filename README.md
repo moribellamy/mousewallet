@@ -17,3 +17,18 @@ Create Ethereum wallets.
 If no args are given, generate a private key (along with the resulting eth address) to STDOUT.
 
 If the `--prefix` arg is given, we generate random wallets until we find one with the given prefix.
+
+## Building
+
+`cmake`, `make`, and any C compiler is sufficient.
+
+```bash
+cd mousewallet_dir
+mkdir build
+cd build
+
+cmake ..
+make
+
+./mousewallet --help
+```
