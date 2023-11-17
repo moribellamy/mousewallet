@@ -1,0 +1,126 @@
+#include "lib.h"
+
+#include <stdio.h>
+#include <string.h>
+
+#include "../vendor/SHA3IUF/sha3.h"
+#include "../vendor/secp256k1/examples/examples_util.h"
+#include "../vendor/secp256k1/include/secp256k1.h"
+
+int decode_hex(unsigned char *bin, const char *const hex) {
+  size_t hex_len = strlen(hex);
+  if (hex_len % 2 == 1) {
+    return 0;
+  }
+  bzero(bin, hex_len / 2);
+
+  // mapping of ASCII characters to hex values
+  const unsigned char hashmap[] = {
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // ........
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // ........
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // ........
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // ........
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //  !"#$%&'
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // ()*+,-./
+      0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, // 01234567
+      0x08, 0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 89:;<=>?
+      0x00, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x00, // @ABCDEFG
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // HIJKLMNO
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // PQRSTUVW
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // XYZ[\]^_
+      0x00, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x00, // `abcdefg
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // hijklmno
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // pqrstuvw
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // xyz{|}~.
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // ........
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // ........
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // ........
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // ........
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // ........
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // ........
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // ........
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // ........
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // ........
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // ........
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // ........
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // ........
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // ........
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // ........
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // ........
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00  // ........
+  };
+
+  size_t pos;
+  unsigned char bytes0, bytes1;
+  char letter0, letter1;
+  for (pos = 0; pos < hex_len; pos += 2) {
+    letter0 = hex[pos];
+    bytes0 = hashmap[letter0];
+    letter1 = hex[pos + 1];
+    bytes1 = hashmap[letter1];
+
+    // printf("%x %c\n", bytes0, letter0);
+    // printf("%x %c\n", bytes1, letter1);
+
+    if ((letter0 == 0x00 && bytes0 != '0') ||
+        (letter1 == 0x00 && bytes1 != '0')) {
+      return 0;
+    }
+
+    bin[pos / 2] = (unsigned char)(hashmap[letter0] << 4) | hashmap[letter1];
+  }
+
+  return 1;
+}
+
+int encode_hex(char *hex, const unsigned char *bin, size_t size) {
+  bzero(hex, size * 2);
+  size_t i;
+  int offset = 0;
+  for (i = 0; i < size; i++) {
+    offset += sprintf(hex + offset, "%02x", bin[i]);
+  }
+  return 1;
+}
+
+void keccak256(unsigned char *hash_bytes, unsigned char *payload, size_t len) {
+  sha3_context ctx;
+  sha3_Init256(&ctx);
+  sha3_SetFlags(&ctx, SHA3_FLAGS_KECCAK);
+  sha3_Update(&ctx, payload, len);
+  const char *hash = sha3_Finalize(&ctx);
+  memcpy(hash_bytes, hash, 32);
+}
+
+void wallet_from_private_key(unsigned char *wallet_bytes,
+                             unsigned const char *const private_key_bytes) {
+  secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
+  CRASH_IF(secp256k1_context_randomize(ctx, NULL) != 1,
+           "Couldn't randomize context.");
+
+  secp256k1_pubkey pubkey;
+  CRASH_IF(secp256k1_ec_pubkey_create(ctx, &pubkey, private_key_bytes) != 1,
+           "Couldn't create public key.");
+
+  // As we saw previously, the public key is a point on the elliptic curve
+  // https://www.oreilly.com/library/view/mastering-bitcoin-2nd/9781491954379/ch04.html
+  // consisting of a pair of coordinates (x,y). It is usually presented with the
+  // prefix 04 followed by two 256-bit numbers: one for the x coordinate of the
+  // point, the other for the y coordinate. The prefix 04 is used to distinguish
+  // uncompressed public keys from compressed public keys that begin with a 02
+  // or a 03.
+  size_t generated = 65;
+  unsigned char pubkey_bytes[65]; // starts with 0x04
+  secp256k1_ec_pubkey_serialize(ctx, pubkey_bytes, &generated, &pubkey,
+                                SECP256K1_EC_UNCOMPRESSED);
+  CRASH_IF(generated != 65, "Couldn't serialize pubkey.");
+
+  unsigned char pubkey_bytes_omit_metadata[64];
+  memcpy(pubkey_bytes_omit_metadata, pubkey_bytes + 1, 64);
+
+  unsigned char keccak256_hash[32];
+  keccak256(keccak256_hash, pubkey_bytes_omit_metadata, 64);
+
+  memcpy(wallet_bytes, keccak256_hash + 12, 20);
+  secp256k1_context_destroy(ctx);
+}
