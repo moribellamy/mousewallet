@@ -7,7 +7,7 @@
 #include "lib.h"
 
 static const char *const usages[] = {
-    "c90eth [options]",
+    "mousewallet [options]",
     NULL,
 };
 
@@ -22,7 +22,7 @@ int main(int argc, const char *argv[]) {
   };
   struct argparse argparse;
   argparse_init(&argparse, options, usages, 0);
-  argparse_describe(&argparse, "\n Create Ethereum wallets.", "");
+  argparse_describe(&argparse, "\nCreate Ethereum wallets.", "");
   argc = argparse_parse(&argparse, argc, argv);
 
   if (argc != 0) {
