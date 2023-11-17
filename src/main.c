@@ -2,8 +2,6 @@
 #include <string.h>
 
 #include "../vendor/argparse/argparse.h"
-#include "../vendor/secp256k1/examples/examples_util.h"
-#include "../vendor/secp256k1/include/secp256k1.h"
 #include "lib.h"
 
 static const char *const usages[] = {
