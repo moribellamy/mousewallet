@@ -63,14 +63,14 @@ add_subdirectory(vendor/secp256k1)
 # Argparse and Keccak
 # -------------------
 add_library(argparse STATIC vendor/argparse/argparse.c)
-add_library(sha3 STATIC vendor/SHA3IUF/sha3.c)
+add_library(keccak STATIC vendor/SHA3IUF/sha3.c)
 
 # ---------------
 # Mousewallet Lib
 # ---------------
 add_library(lib STATIC src/lib.c src/lib.h)
 add_dependencies(lib pcg)
-target_link_libraries(lib sha3 secp256k1 pcg_interface)
+target_link_libraries(lib keccak secp256k1 pcg_interface)
 
 # ---------------
 # Mousewallet CLI
