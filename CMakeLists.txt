@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.26)
 project(mousewallet C)
+enable_testing()
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_EXTENSIONS OFF)
@@ -9,59 +10,26 @@ if (NOT CMAKE_BUILD_TYPE)
     set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif ()
 
-# ----------------
-# PCG Random Suite
-# ----------------
-include(ExternalProject)
-set(PCG_PATH "${CMAKE_SOURCE_DIR}/vendor/pcg-c")
-ExternalProject_Add(
-        pcg_obj_build
-        SOURCE_DIR "${PCG_PATH}/src"
-        CONFIGURE_COMMAND ""  # No configure step
-        BUILD_COMMAND "${MAKE}"
-        BUILD_IN_SOURCE 1     # Build in source tree
-        INSTALL_COMMAND ""    # No install step
-)
-add_library(pcg_objects STATIC IMPORTED)
-set_target_properties(pcg_objects PROPERTIES IMPORTED_LOCATION "${PCG_PATH}/src/libpcg_random.a")
-add_dependencies(pcg_objects pcg_obj_build)
-
-add_library(pcg_extras STATIC ${PCG_PATH}/extras/entropy.c)
-target_include_directories(pcg_extras PRIVATE ${PCG_PATH}/include)
-target_link_libraries(pcg_extras pcg_objects)
-add_dependencies(pcg_extras pcg_obj_build)
-
-# --------------------
-# SECP256k1 curve math
-# --------------------
+# Configure external deps
 set(BUILD_SHARED_LIBS OFF)
 set(SECP256K1_BUILD_TESTS OFF)
 set(SECP256K1_BUILD_EXHAUSTIVE_TESTS OFF)
 set(SECP256K1_BUILD_CTIME_TESTS OFF)
-add_subdirectory(vendor/secp256k1)
-
-# -------------------
-# Argparse and Keccak
-# -------------------
+add_subdirectory("vendor/secp256k1")
 add_library(argparse STATIC vendor/argparse/argparse.c)
-add_library(keccak STATIC vendor/SHA3IUF/sha3.c)
+add_library(sha3 STATIC vendor/SHA3IUF/sha3.c)
 
-# ---------------
-# Mousewallet Lib
-# ---------------
-add_library(lib STATIC src/lib.c src/lib.h)
-add_dependencies(lib pcg_obj_build)
-target_link_libraries(lib keccak secp256k1 pcg_objects pcg_extras)
+# Lib
+add_library(lib STATIC src/lib.c)
+target_link_libraries(lib sha3 secp256k1)
+target_include_directories(lib PRIVATE vendor/secp256k1/include)
 
-# ---------------
-# Mousewallet CLI
-# ---------------
+# Main
 add_executable(mousewallet src/main.c)
-add_dependencies(mousewallet pcg_obj_build)
-target_link_libraries(mousewallet PRIVATE argparse lib pcg_objects)
+target_link_libraries(mousewallet PRIVATE argparse lib)
 
-# -----------------
-# Mousewallet Tests
-# -----------------
+# Test
 add_executable(test_mousewallet src/tests.c)
 target_link_libraries(test_mousewallet PRIVATE lib)
+
+add_test(NAME MousewalletTest COMMAND test_mousewallet)

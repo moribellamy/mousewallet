@@ -2,6 +2,8 @@
 #include <string.h>
 
 #include "../vendor/argparse/argparse.h"
+#include "../vendor/secp256k1/examples/examples_util.h"
+#include "../vendor/secp256k1/include/secp256k1.h"
 #include "lib.h"
 
 static const char *const usages[] = {
@@ -9,33 +11,7 @@ static const char *const usages[] = {
     NULL,
 };
 
-inline static void rand_4_bytes(unsigned char *byte) {
-  uint32_t value = pcg32_random();
-  byte[0] = (value >> 24) & 0xFF;
-  byte[1] = (value >> 16) & 0xFF;
-  byte[2] = (value >> 8) & 0xFF;
-  byte[3] = value & 0xFF;
-}
-
-/**
- * @param buf receives 32 bytes of good random data.
- */
-void rand_32_bytes(unsigned char *buf) {
-  rand_4_bytes(buf);
-  rand_4_bytes(buf + 4);
-  rand_4_bytes(buf + 8);
-  rand_4_bytes(buf + 12);
-  rand_4_bytes(buf + 16);
-  rand_4_bytes(buf + 20);
-  rand_4_bytes(buf + 24);
-  rand_4_bytes(buf + 28);
-}
-
 int main(int argc, const char *argv[]) {
-  uint64_t seeds[2];
-  entropy_getbytes((void *)seeds, sizeof(seeds));
-  pcg32_srandom(seeds[0], seeds[1]);
-
   const char *target_prefix = "";
 
   struct argparse_option options[] = {
@@ -58,7 +34,8 @@ int main(int argc, const char *argv[]) {
   size_t target_hex_len = strlen(target_prefix);
 
   while (1) {
-    rand_32_bytes(private_key_bytes);
+    CRASH_IF(fill_random(private_key_bytes, 32) != 1,
+             "Couldn't generate random key.");
     wallet_from_private_key(wallet_bytes, private_key_bytes);
     char wallet_hex[41], private_key_hex[65];
     encode_hex(wallet_hex, wallet_bytes, 20);
