@@ -24,9 +24,12 @@ ExternalProject_Add(
 )
 add_library(pcg_objects STATIC IMPORTED)
 set_target_properties(pcg_objects PROPERTIES IMPORTED_LOCATION "${PCG_PATH}/src/libpcg_random.a")
+add_dependencies(pcg_objects pcg_obj_build)
+
 add_library(pcg_extras STATIC ${PCG_PATH}/extras/entropy.c)
 target_include_directories(pcg_extras PRIVATE ${PCG_PATH}/include)
 target_link_libraries(pcg_extras pcg_objects)
+add_dependencies(pcg_extras pcg_obj_build)
 
 # --------------------
 # SECP256k1 curve math
