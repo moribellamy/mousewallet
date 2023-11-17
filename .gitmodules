@@ -25,3 +25,6 @@
 [submodule "vendor/argparse"]
 	path = vendor/argparse
 	url = https://github.com/cofyc/argparse.git
+[submodule "vendor/pcg-c"]
+	path = vendor/pcg-c
+	url = https://github.com/imneme/pcg-c.git

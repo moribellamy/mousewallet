@@ -1,8 +1,13 @@
-#ifndef C90ETH_LIBRARY_H
-#define C90ETH_LIBRARY_H
+#ifndef MOUSEWALLET_LIB_H
+#define MOUSEWALLET_LIB_H
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
+#include "../vendor/pcg-c/extras/entropy.h"
+#include "../vendor/pcg-c/include/pcg_variants.h"
 
 #define CRASH_IF(bool_val, message)                                            \
   do {                                                                         \
@@ -29,7 +34,15 @@ int decode_hex(unsigned char *bin, const char *hex);
  * @param size Size of <bin>.
  * @return 1 on success, 0 otherwise.
  */
-int encode_hex(char *hex, const unsigned char *bin, size_t size);
+static inline int encode_hex(char *hex, const unsigned char *bin, size_t size) {
+  memset(hex, 0, size * 2);
+  size_t i;
+  int offset = 0;
+  for (i = 0; i < size; i++) {
+    offset += sprintf(hex + offset, "%02x", bin[i]);
+  }
+  return 1;
+}
 
 /**
  * @param wallet_bytes The bytes for the generated wallet from the private key.
@@ -38,4 +51,4 @@ int encode_hex(char *hex, const unsigned char *bin, size_t size);
 void wallet_from_private_key(unsigned char *wallet_bytes,
                              unsigned const char *private_key_bytes);
 
-#endif // C90ETH_LIBRARY_H
+#endif // MOUSEWALLET_LIB_H

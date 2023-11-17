@@ -11,7 +11,22 @@ static const char *const usages[] = {
     NULL,
 };
 
+/**
+ * @param buf receives 32 bytes of good random data.
+ */
+void rand_key(unsigned char *buf) {
+  uint32_t value = pcg32_random();
+  buf[0] = (value >> 24) & 0xFF;
+  buf[1] = (value >> 16) & 0xFF;
+  buf[2] = (value >> 8) & 0xFF;
+  buf[3] = value & 0xFF;
+}
+
 int main(int argc, const char *argv[]) {
+  uint64_t seeds[2];
+  entropy_getbytes((void *)seeds, sizeof(seeds));
+  pcg32_srandom(seeds[0], seeds[1]);
+
   const char *target_prefix = "";
 
   struct argparse_option options[] = {
@@ -34,8 +49,7 @@ int main(int argc, const char *argv[]) {
   size_t target_hex_len = strlen(target_prefix);
 
   while (1) {
-    CRASH_IF(fill_random(private_key_bytes, 32) != 1,
-             "Couldn't generate random key.");
+    rand_key(private_key_bytes);
     wallet_from_private_key(wallet_bytes, private_key_bytes);
     char wallet_hex[41], private_key_hex[65];
     encode_hex(wallet_hex, wallet_bytes, 20);

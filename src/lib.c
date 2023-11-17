@@ -12,7 +12,7 @@ int decode_hex(unsigned char *bin, const char *const hex) {
   if (hex_len % 2 == 1) {
     return 0;
   }
-  bzero(bin, hex_len / 2);
+  memset(bin, 0, hex_len / 2);
 
   // mapping of ASCII characters to hex values
   const unsigned char hashmap[] = {
@@ -73,17 +73,8 @@ int decode_hex(unsigned char *bin, const char *const hex) {
   return 1;
 }
 
-int encode_hex(char *hex, const unsigned char *bin, size_t size) {
-  bzero(hex, size * 2);
-  size_t i;
-  int offset = 0;
-  for (i = 0; i < size; i++) {
-    offset += sprintf(hex + offset, "%02x", bin[i]);
-  }
-  return 1;
-}
-
-void keccak256(unsigned char *hash_bytes, unsigned char *payload, size_t len) {
+static inline void keccak256(unsigned char *hash_bytes, unsigned char *payload,
+                             size_t len) {
   sha3_context ctx;
   sha3_Init256(&ctx);
   sha3_SetFlags(&ctx, SHA3_FLAGS_KECCAK);
