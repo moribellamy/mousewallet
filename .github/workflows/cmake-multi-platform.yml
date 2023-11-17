@@ -19,17 +19,15 @@ jobs:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
         build_type: [ Release, Debug ]
         c_compiler: [ gcc, clang, msbuild ]
-        include:
+        exclude:
           # Define specific settings for each OS and compiler combination
-          - os: ubuntu-latest
-            c_compiler: gcc
-          - os: ubuntu-latest
-            c_compiler: clang
-          - os: macos-latest
-            c_compiler: gcc
-          - os: macos-latest
-            c_compiler: clang
           - os: windows-latest
+            c_compiler: gcc
+          - os: windows-latest
+            c_compiler: clang
+          - os: ubuntu-latest
+            c_compiler: msbuild
+          - os: macos-latest
             c_compiler: msbuild
 
     steps:
