@@ -9,15 +9,26 @@ static const char *const usages[] = {
     NULL,
 };
 
+inline static void rand_4_bytes(unsigned char *byte) {
+  uint32_t value = pcg32_random();
+  byte[0] = (value >> 24) & 0xFF;
+  byte[1] = (value >> 16) & 0xFF;
+  byte[2] = (value >> 8) & 0xFF;
+  byte[3] = value & 0xFF;
+}
+
 /**
  * @param buf receives 32 bytes of good random data.
  */
-void rand_key(unsigned char *buf) {
-  uint32_t value = pcg32_random();
-  buf[0] = (value >> 24) & 0xFF;
-  buf[1] = (value >> 16) & 0xFF;
-  buf[2] = (value >> 8) & 0xFF;
-  buf[3] = value & 0xFF;
+void rand_32_bytes(unsigned char *buf) {
+  rand_4_bytes(buf);
+  rand_4_bytes(buf + 4);
+  rand_4_bytes(buf + 8);
+  rand_4_bytes(buf + 12);
+  rand_4_bytes(buf + 16);
+  rand_4_bytes(buf + 20);
+  rand_4_bytes(buf + 24);
+  rand_4_bytes(buf + 28);
 }
 
 int main(int argc, const char *argv[]) {
@@ -47,7 +58,7 @@ int main(int argc, const char *argv[]) {
   size_t target_hex_len = strlen(target_prefix);
 
   while (1) {
-    rand_key(private_key_bytes);
+    rand_32_bytes(private_key_bytes);
     wallet_from_private_key(wallet_bytes, private_key_bytes);
     char wallet_hex[41], private_key_hex[65];
     encode_hex(wallet_hex, wallet_bytes, 20);
