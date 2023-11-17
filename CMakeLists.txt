@@ -76,12 +76,10 @@ target_link_libraries(lib sha3 secp256k1 pcg_interface)
 # Mousewallet CLI
 # ---------------
 add_executable(mousewallet src/main.c)
-add_dependencies(mousewallet pcg)
-target_link_libraries(mousewallet PRIVATE argparse lib pcg_interface)
+target_link_libraries(mousewallet PRIVATE argparse lib)
 
 # -----------------
 # Mousewallet Tests
 # -----------------
 add_executable(test_mousewallet src/tests.c)
-add_dependencies(test_mousewallet pcg)
-target_link_libraries(test_mousewallet PRIVATE lib pcg_interface)
+target_link_libraries(test_mousewallet PRIVATE lib)
