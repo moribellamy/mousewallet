@@ -15,40 +15,28 @@ endif ()
 include(ExternalProject)
 set(PCG_PATH "${CMAKE_SOURCE_DIR}/vendor/pcg-c")
 ExternalProject_Add(
-        pcg
-        SOURCE_DIR ${PCG_PATH}
+        pcg_obj_build
+        SOURCE_DIR "${PCG_PATH}/src"
         CONFIGURE_COMMAND ""  # No configure step
-        BUILD_COMMAND make
+        BUILD_COMMAND "${MAKE}"
         BUILD_IN_SOURCE 1     # Build in source tree
         INSTALL_COMMAND ""    # No install step
 )
-add_library(pcg_interface INTERFACE)
-add_dependencies(pcg_interface pcg)
-# find src extras -name *.o
-target_sources(pcg_interface INTERFACE
-        ${PCG_PATH}/src/pcg-rngs-64.o
-        ${PCG_PATH}/src/pcg-output-32.o
-        ${PCG_PATH}/src/pcg-advance-32.o
-        ${PCG_PATH}/src/pcg-output-8.o
-        ${PCG_PATH}/src/pcg-global-64.o
-        ${PCG_PATH}/src/pcg-rngs-16.o
-        ${PCG_PATH}/src/pcg-advance-8.o
-        ${PCG_PATH}/src/pcg-advance-128.o
-        ${PCG_PATH}/src/pcg-rngs-128.o
-        ${PCG_PATH}/src/pcg-advance-64.o
-        ${PCG_PATH}/src/pcg-output-64.o
-        ${PCG_PATH}/src/pcg-rngs-32.o
-        ${PCG_PATH}/src/pcg-output-16.o
-        ${PCG_PATH}/src/pcg-advance-16.o
-        ${PCG_PATH}/src/pcg-output-128.o
-        ${PCG_PATH}/src/pcg-rngs-8.o
-        ${PCG_PATH}/src/pcg-global-32.o
-        ${PCG_PATH}/extras/entropy.o
-)
-target_include_directories(pcg_interface INTERFACE
-        ${PCG_PATH}/include
-        ${PCG_PATH}/extras
-)
+# /bin/ls *.c  | awk '{print "foo/" $0}' | xargs
+add_library(pcg_objects STATIC IMPORTED)
+set_target_properties(pcg_objects PROPERTIES IMPORTED_LOCATION "${PCG_PATH}/src/libpcg_random.a")
+
+add_library(pcg_extras STATIC ${PCG_PATH}/extras/entropy.c)
+target_include_directories(pcg_extras PRIVATE ${PCG_PATH}/include)
+target_link_libraries(pcg_extras pcg_objects)
+
+#add_library(pcg_objects STATIC IMPORTED)
+#set_target_properties(pcg_objects PROPERTIES IMPORTED_LOCATION "${PCG_PATH}/src")
+#set_target_properties(pcg_objects PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${PCG_PATH}/include")
+#
+#add_library(pcg_extras STATIC IMPORTED)
+#set_target_properties(pcg_extras PROPERTIES IMPORTED_LOCATION "${PCG_PATH}/extras")
+#set_target_properties(pcg_extras PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${PCG_PATH}/extras")
 
 # --------------------
 # SECP256k1 curve math
@@ -69,8 +57,8 @@ add_library(keccak STATIC vendor/SHA3IUF/sha3.c)
 # Mousewallet Lib
 # ---------------
 add_library(lib STATIC src/lib.c src/lib.h)
-add_dependencies(lib pcg)
-target_link_libraries(lib keccak secp256k1 pcg_interface)
+add_dependencies(lib pcg_obj_build)
+target_link_libraries(lib keccak secp256k1 pcg_objects pcg_extras)
 
 # ---------------
 # Mousewallet CLI
