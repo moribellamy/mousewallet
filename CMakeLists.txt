@@ -54,6 +54,7 @@ target_link_libraries(lib keccak secp256k1 pcg_objects pcg_extras)
 # Mousewallet CLI
 # ---------------
 add_executable(mousewallet src/main.c)
+add_dependencies(mousewallet pcg_obj_build)
 target_link_libraries(mousewallet PRIVATE argparse lib)
 
 # -----------------
