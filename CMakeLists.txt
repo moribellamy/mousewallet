@@ -22,21 +22,11 @@ ExternalProject_Add(
         BUILD_IN_SOURCE 1     # Build in source tree
         INSTALL_COMMAND ""    # No install step
 )
-# /bin/ls *.c  | awk '{print "foo/" $0}' | xargs
 add_library(pcg_objects STATIC IMPORTED)
 set_target_properties(pcg_objects PROPERTIES IMPORTED_LOCATION "${PCG_PATH}/src/libpcg_random.a")
-
 add_library(pcg_extras STATIC ${PCG_PATH}/extras/entropy.c)
 target_include_directories(pcg_extras PRIVATE ${PCG_PATH}/include)
 target_link_libraries(pcg_extras pcg_objects)
-
-#add_library(pcg_objects STATIC IMPORTED)
-#set_target_properties(pcg_objects PROPERTIES IMPORTED_LOCATION "${PCG_PATH}/src")
-#set_target_properties(pcg_objects PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${PCG_PATH}/include")
-#
-#add_library(pcg_extras STATIC IMPORTED)
-#set_target_properties(pcg_extras PROPERTIES IMPORTED_LOCATION "${PCG_PATH}/extras")
-#set_target_properties(pcg_extras PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${PCG_PATH}/extras")
 
 # --------------------
 # SECP256k1 curve math
